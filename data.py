@@ -9,6 +9,7 @@ import os
 import numpy as np
 import torch
 
+from allennlp.modules.elmo import Elmo, batch_to_ids
 
 def get_batch(batch, word_vec):
     # sent in batch in decreasing order of lengths (bsize, max_len, word_dim)
@@ -22,6 +23,17 @@ def get_batch(batch, word_vec):
 
     return torch.from_numpy(embed).float(), lengths
 
+def get_elmo_rep(batch, elmo, if_cuda=True):
+    # sent in batch in decreasing order of lengths (bsize, max_len, word_dim)
+    lengths = np.array([len(x) for x in batch])
+
+    char_ids = batch_to_ids(batch)
+    if if_cuda:
+        char_ids = char_ids.cuda()
+
+    embeddings = elmo(char_ids)['elmo_representations'][0].transpose(0, 1)
+
+    return embeddings, lengths
 
 def get_word_dict(sentences):
     # create vocab of words
@@ -48,6 +60,9 @@ def get_glove(word_dict, glove_path):
                 len(word_vec), len(word_dict)))
     return word_vec
 
+def build_elmo(option_file, weight_file):
+    elmo = Elmo(options_file, weight_file, 1, dropout=0)
+    return elmo
 
 def build_vocab(sentences, glove_path):
     word_dict = get_word_dict(sentences)
