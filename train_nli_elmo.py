@@ -131,6 +131,7 @@ optim_fn, optim_params = get_optimizer(params.optimizer)
 optimizer = optim_fn(nli_net.parameters(), **optim_params)
 
 # cuda by default
+elmo_model.cuda()
 nli_net.cuda()
 loss_fn.cuda()
 
@@ -172,10 +173,10 @@ def trainepoch(epoch):
         # s2_batch, s2_len = get_batch(s2[stidx:stidx + params.batch_size],
         #                              word_vec)
         s1_batch, s1_len = get_elmo_rep(s1[stidx:stidx + params.batch_size],
-                                     elmo)
+                                     elmo_model)
         s2_batch, s2_len = get_elmo_rep(s2[stidx:stidx + params.batch_size],
-                                     elmo)
-        s1_batch, s2_batch = Variable(s1_batch.cuda()), Variable(s2_batch.cuda())
+                                     elmo_model)
+        # s1_batch, s2_batch = Variable(s1_batch.cuda()), Variable(s2_batch.cuda())
         tgt_batch = Variable(torch.LongTensor(target[stidx:stidx + params.batch_size])).cuda()
         k = s1_batch.size(1)  # actual batch size
 
@@ -189,7 +190,8 @@ def trainepoch(epoch):
         # loss
         loss = loss_fn(output, tgt_batch)
         all_costs.append(loss.data[0])
-        words_count += (s1_batch.nelement() + s2_batch.nelement()) / params.elmo_emb_dim
+        # words_count += (s1_batch.nelement() + s2_batch.nelement()) / params.elmo_emb_dim
+        words_count += s1_len.sum() + s2_len.sum()
 
         # backward
         optimizer.zero_grad()
@@ -246,9 +248,9 @@ def evaluate(epoch, eval_type='valid', final_eval=False):
         # prepare batch
         # s1_batch, s1_len = get_batch(s1[i:i + params.batch_size], word_vec)
         # s2_batch, s2_len = get_batch(s2[i:i + params.batch_size], word_vec)
-        s1_batch, s1_len = get_elmo_rep(s1[i:i + params.batch_size], elmo)
-        s2_batch, s2_len = get_elmo_rep(s1[i:i + params.batch_size], elmo)
-        s1_batch, s2_batch = Variable(s1_batch.cuda()), Variable(s2_batch.cuda())
+        s1_batch, s1_len = get_elmo_rep(s1[i:i + params.batch_size], elmo_model)
+        s2_batch, s2_len = get_elmo_rep(s1[i:i + params.batch_size], elmo_model)
+        # s1_batch, s2_batch = Variable(s1_batch.cuda()), Variable(s2_batch.cuda())
         tgt_batch = Variable(torch.LongTensor(target[i:i + params.batch_size])).cuda()
 
         # model forward
