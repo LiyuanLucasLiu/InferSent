@@ -9,6 +9,7 @@ import os
 import sys
 import time
 import argparse
+# import itertools
 
 import numpy as np
 
@@ -80,6 +81,7 @@ DATA
 """
 train, valid, test = get_nli(params.nlipath)
 elmo_model = build_elmo(OPTION_FILE, WEIGHT_FILE)
+print(elmo_model)
 # word_vec = build_vocab(train['s1'] + train['s2'] +
 #                        valid['s1'] + valid['s2'] +
 #                        test['s1'] + test['s2'], GLOVE_PATH)
@@ -128,7 +130,8 @@ loss_fn.size_average = False
 
 # optimizer
 optim_fn, optim_params = get_optimizer(params.optimizer)
-optimizer = optim_fn(nli_net.parameters(), **optim_params)
+optimizer = optim_fn( list(nli_net.parameters()) + 
+    list(filter(lambda t: t.requires_grad, elmo_model.parameters())), **optim_params)
 
 # cuda by default
 elmo_model.cuda()
@@ -148,6 +151,7 @@ lr = optim_params['lr'] if 'sgd' in params.optimizer else None
 def trainepoch(epoch):
     print('\nTRAINING : Epoch ' + str(epoch))
     nli_net.train()
+    elmo_model.train()
     all_costs = []
     logs = []
     words_count = 0
@@ -205,6 +209,12 @@ def trainepoch(epoch):
             if p.requires_grad:
                 p.grad.data.div_(k)  # divide by the actual batch size
                 total_norm += p.grad.data.norm() ** 2
+
+        for p in elmo_model.parameters():
+            if p.requires_grad:
+                p.grad.data.div_(k)  # divide by the actual batch size
+                total_norm += p.grad.data.norm() ** 2
+
         total_norm = np.sqrt(total_norm)
 
         if total_norm > params.max_norm:

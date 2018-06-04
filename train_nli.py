@@ -28,7 +28,7 @@ parser = argparse.ArgumentParser(description='NLI training')
 # paths
 parser.add_argument("--nlipath", type=str, default='dataset/SNLI/', help="NLI data path (SNLI or MultiNLI)")
 parser.add_argument("--outputdir", type=str, default='savedir/', help="Output directory")
-parser.add_argument("--outputmodelname", type=str, default='model.pickle')
+parser.add_argument("--outputmodelname", type=str, default='blstm-max.pickle')
 
 
 # training
