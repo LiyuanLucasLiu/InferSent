@@ -234,6 +234,7 @@ def trainepoch(epoch):
 
 def evaluate(epoch, eval_type='valid', final_eval=False):
     nli_net.eval()
+    elmo_model.eval()
     correct = 0.
     global val_acc_best, lr, stop_training, adam_stop
 
@@ -274,6 +275,8 @@ def evaluate(epoch, eval_type='valid', final_eval=False):
                 os.makedirs(params.outputdir)
             torch.save(nli_net, os.path.join(params.outputdir,
                        params.outputmodelname))
+            torch.save(elmo_model, os.path.join(params.outputdir, params.outputmodelname+'.scalar'))
+            # torch.save(elmo_model._scalar_mixes[0], os.path.join(params.outputdir, params.outputmodelname + '.scalar'))
             val_acc_best = eval_acc
         else:
             if 'sgd' in params.optimizer:
@@ -298,16 +301,22 @@ epoch = 1
 while not stop_training and epoch <= params.n_epochs:
     train_acc = trainepoch(epoch)
     eval_acc = evaluate(epoch, 'valid')
+    # eval_acc = evaluate(epoch, 'valid')
     epoch += 1
 
 # Run best model on test set.
 del nli_net
 nli_net = torch.load(os.path.join(params.outputdir, params.outputmodelname))
+# scalar_mix = torch.load(os.path.join(params.outputdir, params.outputmodelname + '.scalar'))
+# scalar_mix.cuda()
+# elmo_model._scalar_mixes[0].load_state_dict(scalar_mix.state_dict())
+# elmo_model.scalar_mix_0 = elmo_model._scalar_mixes[0]
+elmo_model = torch.load(os.path.join(params.outputdir, params.outputmodelname + '.scalar'))
 
 print('\nTEST : Epoch {0}'.format(epoch))
 evaluate(1e6, 'valid', True)
 evaluate(0, 'test', True)
 
 # Save encoder instead of full model
-torch.save(nli_net.encoder,
-           os.path.join(params.outputdir, params.outputmodelname + '.encoder'))
+torch.save(nli_net.encoder, os.path.join(params.outputdir, params.outputmodelname + '.encoder'))
+torch.save(elmo_model, os.path.join(params.outputdir, params.outputmodelname+".scalar"))
