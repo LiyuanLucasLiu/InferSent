@@ -61,7 +61,7 @@ def get_glove(word_dict, glove_path):
     return word_vec
 
 def build_elmo(option_file, weight_file):
-    elmo = Elmo(option_file, weight_file, 1, dropout=0)
+    elmo = Elmo(option_file, weight_file, 1, dropout=0.5)
     return elmo
 
 def build_vocab(sentences, glove_path):

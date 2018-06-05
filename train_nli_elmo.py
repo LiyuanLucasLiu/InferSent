@@ -21,6 +21,7 @@ from data import get_nli, build_elmo, get_elmo_rep #, get_batch, build_vocab
 from mutils import get_optimizer
 from models import NLINet
 
+from ipdb import set_trace
 
 # GLOVE_PATH = "dataset/GloVe/glove.840B.300d.txt"
 
@@ -31,7 +32,7 @@ parser = argparse.ArgumentParser(description='NLI training')
 # paths
 parser.add_argument("--nlipath", type=str, default='dataset/SNLI/', help="NLI data path (SNLI or MultiNLI)")
 parser.add_argument("--outputdir", type=str, default='savedir/', help="Output directory")
-parser.add_argument("--outputmodelname", type=str, default='model.pickle')
+parser.add_argument("--outputmodelname", type=str, default='SNLI/elmo-lstm-max.pickle')
 
 
 # training
@@ -176,6 +177,7 @@ def trainepoch(epoch):
         #                              word_vec)
         # s2_batch, s2_len = get_batch(s2[stidx:stidx + params.batch_size],
         #                              word_vec)
+        set_trace()
         s1_batch, s1_len = get_elmo_rep(s1[stidx:stidx + params.batch_size],
                                      elmo_model)
         s2_batch, s2_len = get_elmo_rep(s2[stidx:stidx + params.batch_size],
@@ -260,7 +262,7 @@ def evaluate(epoch, eval_type='valid', final_eval=False):
         # s1_batch, s1_len = get_batch(s1[i:i + params.batch_size], word_vec)
         # s2_batch, s2_len = get_batch(s2[i:i + params.batch_size], word_vec)
         s1_batch, s1_len = get_elmo_rep(s1[i:i + params.batch_size], elmo_model)
-        s2_batch, s2_len = get_elmo_rep(s1[i:i + params.batch_size], elmo_model)
+        s2_batch, s2_len = get_elmo_rep(s2[i:i + params.batch_size], elmo_model)
         # s1_batch, s2_batch = Variable(s1_batch.cuda()), Variable(s2_batch.cuda())
         tgt_batch = Variable(torch.LongTensor(target[i:i + params.batch_size])).cuda()
 
