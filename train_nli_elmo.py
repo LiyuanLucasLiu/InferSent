@@ -32,8 +32,7 @@ parser = argparse.ArgumentParser(description='NLI training')
 # paths
 parser.add_argument("--nlipath", type=str, default='dataset/SNLI/', help="NLI data path (SNLI or MultiNLI)")
 parser.add_argument("--outputdir", type=str, default='savedir/', help="Output directory")
-parser.add_argument("--outputmodelname", type=str, default='SNLI/elmo-lstm-max.pickle')
-
+parser.add_argument("--outputmodelname", type=str, default='SNLI/elmo-lstm-max_lambda.pickle')
 
 # training
 parser.add_argument("--n_epochs", type=int, default=20)
@@ -54,6 +53,7 @@ parser.add_argument("--n_enc_layers", type=int, default=1, help="encoder num lay
 parser.add_argument("--fc_dim", type=int, default=512, help="nhid of fc layers")
 parser.add_argument("--n_classes", type=int, default=3, help="entailment/neutral/contradiction")
 parser.add_argument("--pool_type", type=str, default='max', help="max or mean")
+parser.add_argument("--lambda0", type=float, default=0.001, help="lambda for elmo")
 
 # gpu
 parser.add_argument("--gpu_id", type=int, default=3, help="GPU ID")
@@ -177,7 +177,7 @@ def trainepoch(epoch):
         #                              word_vec)
         # s2_batch, s2_len = get_batch(s2[stidx:stidx + params.batch_size],
         #                              word_vec)
-        set_trace()
+        # set_trace()
         s1_batch, s1_len = get_elmo_rep(s1[stidx:stidx + params.batch_size],
                                      elmo_model)
         s2_batch, s2_len = get_elmo_rep(s2[stidx:stidx + params.batch_size],
@@ -199,6 +199,8 @@ def trainepoch(epoch):
         # words_count += (s1_batch.nelement() + s2_batch.nelement()) / params.elmo_emb_dim
         words_count += s1_len.sum() + s2_len.sum()
 
+        # elmo regularization
+        loss += params.lambda0 * sum([param**2 for param in elmo_model.scalar_mix_0.scalar_parameters])
         # backward
         optimizer.zero_grad()
         loss.backward()
